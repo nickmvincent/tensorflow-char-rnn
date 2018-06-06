@@ -280,8 +280,9 @@ def main():
             else:
                 tf.global_variables_initializer().run()
             for i in range(args.num_epochs):
+                t1 = time.time()
                 for j in range(args.n_save):
-                    t1 = time.time()
+                    
                     logging.info(
                         '=' * 19 + ' Epoch %d: %d/%d' + '=' * 19 + '\n', i+1, j+1, args.n_save)
                     logging.info('Training on training set')
@@ -332,12 +333,12 @@ def main():
                         os.remove(result_path)
                     with open(result_path, 'w') as f:
                         json.dump(result, f, indent=2, sort_keys=True)
-
+                logging.info('This epoch took {}'.format(time.time() - t1))
+                
             logging.info('Latest model is saved in %s', saved_path)
             logging.info('Best model is saved in %s', best_model)
             logging.info('Best validation ppl is %f\n', best_valid_ppl)
             logging.info('Evaluate the best model on test set')
-            logging.info('This epoch took {}'.format(time.time() - t1))
             saver.restore(session, best_model)
             test_ppl, _, _ = test_model.run_epoch(session, test_size, test_batches,
                                                    is_training=False,
