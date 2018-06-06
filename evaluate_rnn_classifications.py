@@ -91,8 +91,8 @@ def main():
         saver.restore(session, best_model)
         
         for i, row in data.iterrows():
-            if i % 10 == 0:
-                print('{} of {} examples tested'.format(i, n))
+            # if i % 10 == 0:
+            #     print('{} of {} examples tested'.format(i, n))
             text = row['processed_text'] + '</s>'
             has_citation = int(row['has_citation'])
             y.append(has_citation)
@@ -103,6 +103,7 @@ def main():
             try:
                 predicted_label = int(sample[-1])
             except ValueError:
+                print('Did not predict 1 or 0.')
                 predicted_label = 0
             y_hat.append(predicted_label)
 
@@ -113,6 +114,10 @@ def main():
     f1_macro = metrics.f1_score(y, y_hat, average='macro')
     acc = metrics.accuracy_score(y, y_hat)
 
+    print('Predicted {} hits. There should be {} hits'.format(
+        sum(y_hat), sum(y)
+    ))
+
     print('roc_auc: {}\nf1_macro:{}\nacc:{}'.format(
         roc_auc, f1_macro, acc
     ))
@@ -120,7 +125,10 @@ def main():
     df = pd.DataFrame()
     df['y'] = y
     df['y_hat'] = y_hat
-    df.to_csv(args.init_dir + '/predictions.csv')
+    df.to_csv(args.init_dir + '/predictions_temper{}_maxprob{}.csv'.format(
+        args.temperature,
+        args.max_prob
+    ))
     with open('y_hat.txt', 'w') as f:
         f.write('\n'.join(
             [str(x) for x in y_hat]

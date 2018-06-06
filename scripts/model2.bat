@@ -1,0 +1,2 @@
+python train.py --data_file=data/train_0.txt --num_epochs=50 --hidden_size=256 --num_layers=1 --model="rnn" --batch_size=64 --output_dir=model2 --dropout=0.1
+tensorboard --logdir=model2/tensorboard_log/ --port=6010
