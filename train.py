@@ -8,6 +8,7 @@ import logging
 import os
 import shutil
 import sys
+import time
 
 import numpy as np
 from char_rnn_model import *
@@ -280,6 +281,7 @@ def main():
                 tf.global_variables_initializer().run()
             for i in range(args.num_epochs):
                 for j in range(args.n_save):
+                    t1 = time.time()
                     logging.info(
                         '=' * 19 + ' Epoch %d: %d/%d' + '=' * 19 + '\n', i+1, j+1, args.n_save)
                     logging.info('Training on training set')
@@ -335,6 +337,7 @@ def main():
             logging.info('Best model is saved in %s', best_model)
             logging.info('Best validation ppl is %f\n', best_valid_ppl)
             logging.info('Evaluate the best model on test set')
+            logging.info('This epoch took {}'.format(time.time() - t1))
             saver.restore(session, best_model)
             test_ppl, _, _ = test_model.run_epoch(session, test_size, test_batches,
                                                    is_training=False,
