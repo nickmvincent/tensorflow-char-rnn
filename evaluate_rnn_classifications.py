@@ -79,10 +79,7 @@ def main():
 
     if args.seed >= 0:
         np.random.seed(args.seed)
-    # Sampling a sequence 
-
     data = pd.read_csv('data/test_0.csv', encoding='utf8')
-
     y = []
     y_hat = []
     n = len(data.index)
@@ -93,19 +90,24 @@ def main():
         for i, row in data.iterrows():
             # if i % 10 == 0:
             #     print('{} of {} examples tested'.format(i, n))
-            text = row['processed_text'] + '</s>'
+            text = row['processed_text'] + '``'
             has_citation = int(row['has_citation'])
             y.append(has_citation)
             sample = test_model.sample_seq(session, 1, text,
                                             vocab_index_dict, index_vocab_dict,
                                             temperature=args.temperature,
                                             max_prob=args.max_prob)
+            print(sample)
+            input()
             try:
                 predicted_label = int(sample[-1])
             except ValueError:
                 print('Did not predict 1 or 0.')
                 predicted_label = 0
             y_hat.append(predicted_label)
+            if predicted_label == 1:
+                print('Actual label was: ', str(has_citation))
+                print(text)
 
     try:
         roc_auc = metrics.roc_auc_score(y, y_hat)
@@ -113,15 +115,12 @@ def main():
         roc_auc = 'undefined'
     f1_macro = metrics.f1_score(y, y_hat, average='macro')
     acc = metrics.accuracy_score(y, y_hat)
-
     print('Predicted {} hits. There should be {} hits'.format(
         sum(y_hat), sum(y)
     ))
-
     print('roc_auc: {}\nf1_macro:{}\nacc:{}'.format(
         roc_auc, f1_macro, acc
     ))
-
     df = pd.DataFrame()
     df['y'] = y
     df['y_hat'] = y_hat

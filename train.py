@@ -11,6 +11,8 @@ import sys
 import time
 
 import numpy as np
+import pandas as pd
+from sklearn import metrics
 from char_rnn_model import *
 from six import iteritems
 
@@ -264,6 +266,9 @@ def main():
     result['vocab_file'] = args.vocab_file
     result['encoding'] = args.encoding
 
+    test_df = pd.read_csv('data/test_0.csv', encoding='utf8')
+    
+
     try:
         # Use try and finally to make sure that intermediate
         # results are saved correctly so that training can
@@ -312,6 +317,37 @@ def main():
                         is_training=False,
                         verbose=args.verbose,
                         freq=args.progress_freq)
+
+                    print('Going to evaluate classification quality')
+                    y = []
+                    y_hat = []
+                    for i, row in test_df.iterrows():
+                        text = row['processed_text'] + '``'
+                        has_citation = int(row['has_citation'])
+                        y.append(has_citation)
+                        sample = test_model.sample_seq(session, 1, text,
+                                                        vocab_index_dict, index_vocab_dict,
+                                                        temperature=1,
+                                                        max_prob=False)
+                        try:
+                            predicted_label = int(sample[-1])
+                        except ValueError:
+                            print('Did not predict 1 or 0.')
+                            predicted_label = 0
+                    y_hat.append(predicted_label)
+                    try:
+                        roc_auc = metrics.roc_auc_score(y, y_hat)
+                    except ValueError:
+                        roc_auc = 'undefined'
+                    f1_macro = metrics.f1_score(y, y_hat, average='macro')
+                    acc = metrics.accuracy_score(y, y_hat)
+                    print('Predicted {} hits. There should be {} hits'.format(
+                        sum(y_hat), sum(y)
+                    ))
+                    print('roc_auc: {}\nf1_macro:{}\nacc:{}'.format(
+                        roc_auc, f1_macro, acc
+                    ))
+                    
 
                     # save and update best model
                     if (not best_model) or (valid_ppl < best_valid_ppl):
